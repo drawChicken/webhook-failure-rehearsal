@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: MIT
+name: Webhook Failure Rehearsal
+description: Rehearse synthetic duplicate, stale and failed webhook assertions offline. No live provider verification.
+author: DrawChicken
+branding:
+  icon: repeat
+  color: orange
+inputs:
+  scenario-path:
+    description: Bounded workspace-relative JSON path. Data only, never an adapter module.
+    required: true
+  output-dir:
+    description: Fresh workspace-relative rehearsal-output/<safe-name> directory. Existing reports are refused.
+    required: false
+    default: rehearsal-output/action
+  adapter:
+    description: reference (synthetic model only) or buggy (intentional negative control). Custom code requires explicit trusted library integration.
+    required: false
+    default: reference
+outputs:
+  outcome:
+    description: PASS, FAIL, UNSUPPORTED or ERROR. Non-PASS always fails the step.
+    value: ${{ steps.rehearse.outputs.outcome }}
+  report-json:
+    description: Workspace-relative JSON report path, empty on operational error.
+    value: ${{ steps.rehearse.outputs.report-json }}
+  report-html:
+    description: Workspace-relative inert HTML report path, empty on operational error.
+    value: ${{ steps.rehearse.outputs.report-html }}
+runs:
+  using: composite
+  steps:
+    - id: rehearse
+      shell: bash
+      env:
+        WHR_ACTION_PATH: ${{ github.action_path }}
+        WHR_SCENARIO_PATH: ${{ inputs.scenario-path }}
+        WHR_OUTPUT_DIR: ${{ inputs.output-dir }}
+        WHR_ADAPTER: ${{ inputs.adapter }}
+      run: node "$WHR_ACTION_PATH/src/action.mjs"

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "apiProfile": "synthetic-subscription-revision-v1",
+  "synthetic": true,
+  "title": "Synthetic future event profile must never execute",
+  "scenarios": [{
+    "id": "version-mismatch",
+    "title": "Synthetic unsupported profile, not a real provider API version",
+    "initial": {"resources": [], "processed": [], "sideEffects": 0},
+    "attempts": [{
+      "event": {"id": "evt_future", "type": "subscription.snapshot", "apiProfile": "synthetic-subscription-revision-v2", "data": {"id": "sub_demo", "revision": 1, "status": "active"}},
+      "failBeforeCommit": false,
+      "expect": {"result": "APPLIED", "state": {"resources": [{"id": "sub_demo", "revision": 1, "status": "active"}], "processed": ["evt_future"], "sideEffects": 1}}
+    }]
+  }]
+}

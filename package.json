@@ -1,0 +1,14 @@
+{
+  "name": "private-webhook-failure-rehearsal",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "engines": { "node": ">=22 <23" },
+  "exports": {
+    ".": { "types": "./src/index.d.ts", "import": "./src/index.mjs" },
+    "./io": { "types": "./src/io.d.mts", "import": "./src/io.mjs" },
+    "./action": { "types": "./src/action-runner.d.mts", "import": "./src/action-runner.mjs" }
+  },
+  "scripts": { "test": "node scripts/test.mjs", "demo": "node scripts/demo.mjs", "smoke:action": "node scripts/action-smoke.mjs" }
+}

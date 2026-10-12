@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: MIT
+# Example only: not installed in .github/workflows and not a hosted-run receipt.
+# Before release, replace third-party major selectors with approved immutable SHAs.
+name: Synthetic webhook rehearsal
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  rehearse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # This example assumes the reviewed kit is the repository root.
+      # In a consumer repo use an approved immutable marketplace action SHA,
+      # or a reviewed vendored kit path. No live slug is claimed here.
+      - id: rehearsal
+        uses: ./
+        with:
+          scenario-path: fixtures/rehearsal.json
+          output-dir: rehearsal-output/reference
+          adapter: reference
+      # FAIL and UNSUPPORTED already fail the step/job. No masking, upload,
+      # comments, commits or external report transmission are configured.

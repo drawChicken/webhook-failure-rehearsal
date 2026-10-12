@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "apiProfile": "synthetic-subscription-revision-v1",
+  "synthetic": true,
+  "title": "Synthetic unsupported event must never execute",
+  "scenarios": [{
+    "id": "unknown-event",
+    "title": "Synthetic invented invoice event outside the supported model",
+    "initial": {"resources": [], "processed": [], "sideEffects": 0},
+    "attempts": [{
+      "event": {"id": "evt_unknown", "type": "invoice.paid", "apiProfile": "synthetic-subscription-revision-v1", "data": {"id": "sub_demo", "revision": 1, "status": "active"}},
+      "failBeforeCommit": false,
+      "expect": {"result": "APPLIED", "state": {"resources": [{"id": "sub_demo", "revision": 1, "status": "active"}], "processed": ["evt_unknown"], "sideEffects": 1}}
+    }]
+  }]
+}

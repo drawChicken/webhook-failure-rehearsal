@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "apiProfile": "synthetic-subscription-revision-v1",
+  "synthetic": true,
+  "title": "Synthetic subscription access: duplicate, stale, retry and same revision",
+  "scenarios": [
+    {
+      "id": "duplicate",
+      "title": "Synthetic repeated activation must not repeat the transactional effect",
+      "initial": {"resources": [], "processed": [], "sideEffects": 0},
+      "attempts": [
+        {
+          "event": {"id": "evt_activate", "type": "subscription.snapshot", "apiProfile": "synthetic-subscription-revision-v1", "data": {"id": "sub_studio", "revision": 1, "status": "active"}},
+          "failBeforeCommit": false,
+          "expect": {"result": "APPLIED", "state": {"resources": [{"id": "sub_studio", "revision": 1, "status": "active"}], "processed": ["evt_activate"], "sideEffects": 1}}
+        },
+        {
+          "event": {"id": "evt_activate", "type": "subscription.snapshot", "apiProfile": "synthetic-subscription-revision-v1", "data": {"id": "sub_studio", "revision": 1, "status": "active"}},
+          "failBeforeCommit": false,
+          "expect": {"result": "DUPLICATE", "state": {"resources": [{"id": "sub_studio", "revision": 1, "status": "active"}], "processed": ["evt_activate"], "sideEffects": 1}}
+        },
+        {
+          "event": {"id": "evt_activate", "type": "subscription.snapshot", "apiProfile": "synthetic-subscription-revision-v1", "data": {"id": "sub_studio", "revision": 1, "status": "active"}},
+          "failBeforeCommit": false,
+          "expect": {"result": "DUPLICATE", "state": {"resources": [{"id": "sub_studio", "revision": 1, "status": "active"}], "processed": ["evt_activate"], "sideEffects": 1}}
+        }
+      ]
+    },
+    {
+      "id": "reordered",
+      "title": "Synthetic cancellation revision arrives before activation and trial revisions",
+      "initial": {"resources": [], "processed": [], "sideEffects": 0},
+      "attempts": [
+        {
+          "event": {"id": "evt_cancel", "type": "subscription.snapshot", "apiProfile": "synthetic-subscription-revision-v1", "data": {"id": "sub_agency", "revision": 3, "status": "canceled"}},
+          "failBeforeCommit": false,
+          "expect": {"result": "APPLIED", "state": {"resources": [{"id": "sub_agency", "revision": 3, "status": "canceled"}], "processed": ["evt_cancel"], "sideEffects": 1}}
+        },
+        {
+          "event": {"id": "evt_late_active", "type": "subscription.snapshot", "apiProfile": "synthetic-subscription-revision-v1", "data": {"id": "sub_agency", "revision": 2, "status": "active"}},
+          "failBeforeCommit": false,
+          "expect": {"result": "STALE", "state": {"resources": [{"id": "sub_agency", "revision": 3, "status": "canceled"}], "processed": ["evt_cancel", "evt_late_active"], "sideEffects": 1}}
+        },
+        {
+          "event": {"id": "evt_late_trial", "type": "subscription.snapshot", "apiProfile": "synthetic-subscription-revision-v1", "data": {"id": "sub_agency", "revision": 1, "status": "trialing"}},
+          "failBeforeCommit": false,
+          "expect": {"result": "STALE", "state": {"resources": [{"id": "sub_agency", "revision": 3, "status": "canceled"}], "processed": ["evt_cancel", "evt_late_active", "evt_late_trial"], "sideEffects": 1}}
+        }
+      ]
+    },
+    {
+      "id": "retry-after-failure",
+      "title": "Synthetic transaction abort then retry must commit exactly once",
+      "initial": {"resources": [{"id": "sub_team", "revision": 1, "status": "trialing"}], "processed": [], "sideEffects": 0},
+      "attempts": [
+        {
+          "event": {"id": "evt_upgrade", "type": "subscription.snapshot", "apiProfile": "synthetic-subscription-revision-v1", "data": {"id": "sub_team", "revision": 2, "status": "active"}},
+          "failBeforeCommit": true,
+          "expect": {"result": "ERROR", "state": {"resources": [{"id": "sub_team", "revision": 1, "status": "trialing"}], "processed": [], "sideEffects": 0}}
+        },
+        {
+          "event": {"id": "evt_upgrade", "type": "subscription.snapshot", "apiProfile": "synthetic-subscription-revision-v1", "data": {"id": "sub_team", "revision": 2, "status": "active"}},
+          "failBeforeCommit": false,
+          "expect": {"result": "APPLIED", "state": {"resources": [{"id": "sub_team", "revision": 2, "status": "active"}], "processed": ["evt_upgrade"], "sideEffects": 1}}
+        },
+        {
+          "event": {"id": "evt_upgrade", "type": "subscription.snapshot", "apiProfile": "synthetic-subscription-revision-v1", "data": {"id": "sub_team", "revision": 2, "status": "active"}},
+          "failBeforeCommit": false,
+          "expect": {"result": "DUPLICATE", "state": {"resources": [{"id": "sub_team", "revision": 2, "status": "active"}], "processed": ["evt_upgrade"], "sideEffects": 1}}
+        }
+      ]
+    },
+    {
+      "id": "same-revision-new-id",
+      "title": "Synthetic equivalent snapshot under another event ID is stale, not a second effect",
+      "initial": {"resources": [], "processed": [], "sideEffects": 0},
+      "attempts": [
+        {
+          "event": {"id": "evt_alpha", "type": "subscription.snapshot", "apiProfile": "synthetic-subscription-revision-v1", "data": {"id": "sub_small", "revision": 1, "status": "active"}},
+          "failBeforeCommit": false,
+          "expect": {"result": "APPLIED", "state": {"resources": [{"id": "sub_small", "revision": 1, "status": "active"}], "processed": ["evt_alpha"], "sideEffects": 1}}
+        },
+        {
+          "event": {"id": "evt_beta", "type": "subscription.snapshot", "apiProfile": "synthetic-subscription-revision-v1", "data": {"id": "sub_small", "revision": 1, "status": "active"}},
+          "failBeforeCommit": false,
+          "expect": {"result": "STALE", "state": {"resources": [{"id": "sub_small", "revision": 1, "status": "active"}], "processed": ["evt_alpha", "evt_beta"], "sideEffects": 1}}
+        }
+      ]
+    }
+  ]
+}

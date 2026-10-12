@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": false,
+    "types": [],
+    "lib": ["ES2022"]
+  },
+  "files": ["tests/types.mts", "src/index.d.ts", "src/io.d.mts", "src/action-runner.d.mts"]
+}
